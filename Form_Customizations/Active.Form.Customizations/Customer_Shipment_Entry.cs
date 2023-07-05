@@ -7,7 +7,7 @@
 	Info:    Connect to WorldShip, send data to WS Keyed Import, get Tracking
 	         from WorldShip Database ( Also FedEx Ship Manager --KV )
 
-	Changed: 03/21/2023
+	Changed: 05/02/2023
 	By:      Kevin Veldman
 
 ============================================================================*/
@@ -145,31 +145,33 @@ public class Script
 		{
 			var server = ssrsServer;
 
-			bool byCategories = true;					// Set to false for single folder, true otherwise
-			if (appendstring){
-			if (byCategories) ssrsPrefix += "Production Management/";
+			bool byCategories = true; // Set to false for single folder, true otherwise
+			if (appendstring) {
+				if (byCategories) ssrsPrefix += "Production Management/";
 				appendstring = false;
 			}
-	
-			var reportPath = string.Format ("{0}PackSlip", ssrsPrefix);
+			
+			var reportName = "PackSlipKV"; //"PackSlip";
+			var reportPath = string.Format ("{0}{1}", ssrsPrefix, reportName);
 	
 			// get the PO Number
 			var txtPackNum = (EpiTextBox)csm.GetNativeControlReference ("84a2d315-d340-4584-b074-31022dd1c614");
-			var packNum = txtPackNum.Text;	// "150000"
-			if (string.IsNullOrEmpty(packNum)) {
+			var packNum = txtPackNum.Text; // "150000"
+			if ( string.IsNullOrEmpty(packNum) ) {
 				MessageBox.Show ("Please enter a Pack Num");
 				return;
 			}
 
-			if (args.Tool.Key == "CBPrintButton")
-			{
+			if (args.Tool.Key == "CBPrintButton") {
+
 				bool displayReport = true;  //show report in Adobe or Foxit; False to display the pdf to view or save like used to be
 					
-				if (displayReport == false) {
-					var reportUrl = string.Format ("http://{0}/ReportServer?{1}&rs:Format=PDF&Company={2}&PackNum={3}", server, reportPath, company, packNum);
+				if ( !displayReport ) {
+
+					var reportUrl = string.Format( "http://{0}/ReportServer?{1}&rs:Format=PDF&Company={2}&PackNum={3}", server, reportPath, company, packNum );
 					Process.Start(reportUrl);
-				}
-				else {
+
+				} else {
 					// set the parameter values and filename
 					filename = string.Format(@"{2}PackNum_{0}_{1:yyyyMMdd_HHmmss}.pdf", packNum, DateTime.Now, System.IO.Path.GetTempPath());
 						
@@ -186,18 +188,17 @@ public class Script
 					oTrans.PushStatusText ("Executing Report", true);
 					var reportBytes = CodaBears.Epicor.QuickPrint.Reports.GetSSRSReport (serviceAddress, reportPath, parmList);
 		
-					if (reportBytes == null) { MessageBox.Show ("No report was returned."); }
+					if (reportBytes == null) MessageBox.Show ("No report was returned.");
 	
 					System.IO.File.WriteAllBytes(filename, reportBytes);
 	
 					Process proce = new Process();
 					proce.StartInfo.FileName = filename;
 					proce.Start();
-
 				}
-			}
-			else 
-			{
+
+			} else {
+
 				//case when len (h.NotifyEMail) = 0 then c.EMailAddress else h.NotifyEMail end as NotifyEmail
 				oTrans.PushStatusText ("Get email", true);
 				var ShipHeadView = (EpiDataView)oTrans.EpiDataViews["ShipHead"];
@@ -205,14 +206,12 @@ public class Script
 				var custNum = (int)ShipHeadView.dataView[ShipHeadView.Row]["CustNum"];
 
 				string emailTo = "";
-				using (var svc = WCFServiceSupport.CreateImpl<Erp.Proxy.BO.CustomerImpl>(session, Epicor.ServiceModel.Channels.ImplBase<Erp.Contracts.CustomerSvcContract>.UriPath))
-				{
+
+				using (var svc = WCFServiceSupport.CreateImpl<Erp.Proxy.BO.CustomerImpl>(session, Epicor.ServiceModel.Channels.ImplBase<Erp.Contracts.CustomerSvcContract>.UriPath)) {
 
 					var custDs = svc.GetByID(custNum);
 					emailTo = (string)custDs.Tables["Customer"].Rows[0]["EMailAddress"];
-					if (string.IsNullOrEmpty(emailTo)) {
-						emailTo = shipHeadEmail;
-					}
+					if (string.IsNullOrEmpty(emailTo)) emailTo = shipHeadEmail;
 
 					oTrans.PushStatusText ("Set up email parameters", true);
 					var emailSubject = "Pack Slip";
@@ -233,12 +232,11 @@ public class Script
 					oTrans.PushStatusText ("Executing Report", true);
 					var reportBytes = CodaBears.Epicor.QuickPrint.Reports.GetSSRSReport (serviceAddress, reportPath, parmList);
 	
-					if (reportBytes == null) 
-					{
+					if (reportBytes == null) {
 						MessageBox.Show ("No report was returned.");
-					}
-					else 
-					{						
+					
+					} else {
+
 						oTrans.PushStatusText ("Set up email message", true);
 						// set up the email message (using outlook); saves to sent items, but requires file IO
 						var application = new Microsoft.Office.Interop.Outlook.Application();
@@ -274,17 +272,16 @@ public class Script
 
 
     // Handle Exited event and display process information.
-    private void myProcess_Exited(object sender, System.EventArgs e)
-    {
+    private void myProcess_Exited(object sender, System.EventArgs e) {
+
        System.IO.File.Delete(filename);
     }
 
 
-	private void btnSyncUPS_Click(object sender, System.EventArgs args)
-	{
+	private void btnSyncUPS_Click(object sender, System.EventArgs args) {
 		// ** Place Event Handling Code Here **
-		if (!string.IsNullOrEmpty(oTrans.PackNum)) 
-		{
+		if (!string.IsNullOrEmpty(oTrans.PackNum)) {
+
 			var sPackNum = oTrans.PackNum;
 			var eShipHead = (EpiDataView)(oTrans.EpiDataViews["ShipHead"]);
 			var dShipDate = (DateTime)eShipHead.dataView[eShipHead.Row]["ShipDate"];
@@ -303,6 +300,7 @@ public class Script
 	}
 
 	private void CustShipForm_KeyPress(object sender, KeyEventArgs e) {
+
 		if ( e.KeyCode == Keys.F4 ) {
 
 			var txtPackNum = (EpiTextBox)csm.GetNativeControlReference ("84a2d315-d340-4584-b074-31022dd1c614");
@@ -410,7 +408,6 @@ public class Script
 	}
 
 	public static IntPtr GetWinHandle( string wName ) {
-
 		return FindWindow(null, wName);
 	}
 
@@ -423,7 +420,8 @@ public class Script
 
 /*== CHANGE LOG =============================================================================
 	
-	KVE 2023/02/08: Update "var sConnection" string to new Db name (2023 Version Upgrade);
-	KVE 2023/03/21: Add hoykey F8 to populate FedEx ShipManager "Lookup Value" window;
+	2023/02/08: +sConnection => new Db name (2023 Version Upgrade);
+	2023/03/21: +hotkey F8 => populate FedEx ShipManager integration lookup;
+	2023/05/02: +use "PackSlipKV";
 
 ===========================================================================================*/

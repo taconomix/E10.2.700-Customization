@@ -7,13 +7,12 @@
 	Info:    Create custom JobTraveler/O-Form using QuickPrint DLL,
 			 Print to PDF or open Outlook item as PDF Attachment. 
 
-	Changed: 03/24/2023
+	Changed: 03/28/2023
 	By:      Kevin Veldman
 
 ============================================================================*/
 
 extern alias Erp_Contracts_BO_Company;
-
 extern alias Erp_Contracts_BO_Project;
 extern alias Erp_Contracts_BO_Part;
 extern alias Microsoft_Office_Interop_Outlook;
@@ -86,23 +85,17 @@ public class Script
 
 	private void JobEntryForm_Load(object sender, EventArgs args) {
 
-		/*
+		/* email buttons removed 2023/03/28
+
+		// Email Traveler Button
 		var button = new ButtonTool("btnEmailTrav");
 		baseToolbarsManager.Tools.Add(button);
 		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnEmailTrav");
 		baseToolbarsManager.Tools["btnEmailTrav"].SharedProps.DisplayStyle = ToolDisplayStyle.ImageOnlyOnToolbars;
 		baseToolbarsManager.Tools["btnEmailTrav"].SharedProps.Caption = "Email JobTraveler";
 		baseToolbarsManager.Tools["btnEmailTrav"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources.cbi_email.Handle);
-		*/
-		// print button
-		var printButton = new ButtonTool("btnPrintTrav");
-		baseToolbarsManager.Tools.Add(printButton);
-		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnPrintTrav");
-		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.DisplayStyle = ToolDisplayStyle.ImageOnlyOnToolbars;
-		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.Caption = "Print Job Traveler";
-		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources.print.Handle);
-
-		/* // watermark email button
+		
+		// O-Form Email Button 
 		var watermarkEmailButton = new ButtonTool("btnEmailOF");
 		baseToolbarsManager.Tools.Add(watermarkEmailButton);
 		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnEmailOF");
@@ -110,13 +103,31 @@ public class Script
 		baseToolbarsManager.Tools["btnEmailOF"].SharedProps.Caption = "Email O-Form";
 		baseToolbarsManager.Tools["btnEmailOF"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources.cbi_email_blue.Handle);
 		*/
-		// print button
-		var watermarkPrintButton = new ButtonTool("btnPrintOF");
-		baseToolbarsManager.Tools.Add(watermarkPrintButton);
+
+
+		// print Job Traveler button
+		var jtPrintButton = new ButtonTool("btnPrintTrav");
+		baseToolbarsManager.Tools.Add(jtPrintButton);
+		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnPrintTrav");
+		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.DisplayStyle = ToolDisplayStyle.ImageOnlyOnToolbars;
+		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.Caption = "Print Job Traveler";
+		baseToolbarsManager.Tools["btnPrintTrav"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources.print.Handle);
+
+		// print O-Form button
+		var ofPrintButton = new ButtonTool("btnPrintOF");
+		baseToolbarsManager.Tools.Add(ofPrintButton);
 		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnPrintOF");
 		baseToolbarsManager.Tools["btnPrintOF"].SharedProps.DisplayStyle = ToolDisplayStyle.ImageOnlyOnToolbars;
 		baseToolbarsManager.Tools["btnPrintOF"].SharedProps.Caption = "Print O-Form";
 		baseToolbarsManager.Tools["btnPrintOF"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources.print_blue.Handle);
+
+		// Print Traveler and O-Form Button
+		var doublePrintButton = new ButtonTool("btnPrintAll");
+		baseToolbarsManager.Tools.Add(doublePrintButton);
+		baseToolbarsManager.Toolbars["Standard Tools"].Tools.AddTool("btnPrintAll");
+		baseToolbarsManager.Tools["btnPrintAll"].SharedProps.DisplayStyle = ToolDisplayStyle.ImageOnlyOnToolbars;
+		baseToolbarsManager.Tools["btnPrintAll"].SharedProps.Caption = "Print Traveler && O-Form";
+		baseToolbarsManager.Tools["btnPrintAll"].SharedProps.AppearancesSmall.Appearance.Image = Bitmap.FromHicon(CodaBears.Epicor.QuickPrint.Properties.Resources._2.Handle);
 
 		// get ssrs data
 		session = (Ice.Core.Session)JobEntryForm.Session;
@@ -136,13 +147,22 @@ public class Script
 	}
 
 	bool appendpath = true;
-	private void baseToolbarsManager_ToolClick(object sender, Infragistics.Win.UltraWinToolbars.ToolClickEventArgs args)
-	{
-		var isOForm = args.Tool.Key == "btnPrintOF" || args.Tool.Key == "btnEmailOF";
-		var printButton = args.Tool.Key == "btnPrintOF" || args.Tool.Key == "btnPrintTrav";
-		var emailButton = args.Tool.Key == "btnEmailOF" || args.Tool.Key == "btnEmailTrav"; 
+	private void baseToolbarsManager_ToolClick(object sender, Infragistics.Win.UltraWinToolbars.ToolClickEventArgs args) {
+
+		/* Old
+			var isOForm = args.Tool.Key == "btnPrintOF" || args.Tool.Key == "btnEmailOF";
+			var printButton = args.Tool.Key == "btnPrintOF" || args.Tool.Key == "btnPrintTrav";
+			var emailButton = args.Tool.Key == "btnEmailOF" || args.Tool.Key == "btnEmailTrav"; 
+		*/
+
+		var printOF = args.Tool.Key == "btnPrintOF";
+		var printJT = args.Tool.Key == "btnPrintTrav";
+		var printBoth = args.Tool.Key == "btnPrintAll"; 
+		var printAny = printOF || printJT || printBoth;
 		
-		if ( printButton || emailButton ) {
+		
+		//if ( printButton || emailButton ) { //email removed
+		if ( printAny ) {
 
 			Cursor.Current = System.Windows.Forms.Cursors.WaitCursor;
 			
@@ -165,7 +185,7 @@ public class Script
 			// get the Order Number, OrderLine, Watermark filename
 			int orderNum = 0;
 			int orderLine = 0;
-			var watermarkName = string.Empty;
+			var bkgName = string.Empty;
 			using (var conn = new SqlConnection (ConnectionString)) {
 				var cmd = new SqlCommand();
 				cmd.Connection = conn;
@@ -184,90 +204,121 @@ public class Script
 							orderLine = dr.GetInt32 (dr.GetOrdinal ("OrderLine"));
 
 						if (!dr.IsDBNull (dr.GetOrdinal ("oForm")))
-							watermarkName = dr.GetString (dr.GetOrdinal ("oForm")) + ".pdf";
+							bkgName = dr.GetString (dr.GetOrdinal ("oForm")) + ".pdf";
 					}
 				}
 			}
 			
-			if (orderNum <= 0 || orderLine <= 0) {
+
+			if ( (printBoth || printOF) && (orderNum <= 0 || orderLine <= 0) ) {
 				MessageBox.Show (string.Format ("No order was found for job {0}", jobNum), "ToolClick");
 				return;
 			}
 
 			// set the parameter values and filename
-			string reportNamePrefix = isOForm? "OForm": "JobTrav";
-			filename = string.Format(@"{2}{3}_{0}_{1:yyyyMMdd_HHmmss}.pdf", orderNum, DateTime.Now, System.IO.Path.GetTempPath(),reportNamePrefix);
+			var ofFileName = string.Format(@"{0}{1}_{2}_{3:yyyyMMdd_HHmmss}.pdf", System.IO.Path.GetTempPath(), "OForm", orderNum, DateTime.Now);
+			var jtFileName = string.Format(@"{0}{1}_{2}_{3:yyyyMMdd_HHmmss}.pdf", System.IO.Path.GetTempPath(), "JobTrav", jobNum, DateTime.Now);
+				//string reportNamePrefix = printBoth? "OForm": "JobTrav";
+				//var fileName = string.Format(@"{0}{1}_{2}_{3:yyyyMMdd_HHmmss}.pdf", System.IO.Path.GetTempPath(), reportNamePrefix, orderNum, DateTime.Now);
 
 			//may need to be https depending on the client setup
 			var serviceAddress = string.Format("http://{0}/reportserver/ReportExecution2005.asmx", server);
 
 			// create the parameters
 			var session = (Ice.Core.Session)JobEntryForm.Session;
-			var parmList = new System.Collections.Specialized.OrderedDictionary();
-				parmList.Add("Company", session.CompanyID);
 
-			if ( isOForm ) {
-				parmList.Add("OrderNum", orderNum.ToString());
-				parmList.Add("OrderLine", orderLine.ToString());
-			} else {
-				parmList.Add("JobNum", jobNum);
-			}
+			var parmListJT = new System.Collections.Specialized.OrderedDictionary();
+				parmListJT.Add("Company", session.CompanyID);
+				parmListJT.Add("JobNum", jobNum);
+
+			var parmListOF = new System.Collections.Specialized.OrderedDictionary();
+				parmListOF.Add("Company", session.CompanyID);
+				parmListOF.Add("OrderNum", orderNum.ToString());
+				parmListOF.Add("OrderLine", orderLine.ToString());
 
 			// execute the report
-			var ssrsRptName = string.Empty;
-			if (isOForm) {
-				switch (watermarkName) {
-					case "ACTIVE-TLSO.pdf":
-						ssrsRptName = "OForm TLSO_Active";
-						break;
-					case "ACTIVE-HEKO.pdf":
-						ssrsRptName = "OForm HEKO_Active";
-						break;
-					case "ACTIVE-KAFO.pdf":
-						ssrsRptName = "OForm KAFO_Active";
-						break;
-					default:
-						ssrsRptName = "OForm SMO-AFO_Active";
-						break;
-				}
-			} else {
-				ssrsRptName = "JobTravQP";
+			var rptNameJT = "JobTravQP";
+			var rptNameOF = string.Empty;
+			switch (bkgName) {
+				case "ACTIVE-TLSO.pdf":
+					rptNameOF = "OForm TLSO_Active";
+					break;
+				case "ACTIVE-HEKO.pdf":
+					rptNameOF = "OForm HEKO_Active";
+					break;
+				case "ACTIVE-KAFO.pdf":
+					rptNameOF = "OForm KAFO_Active";
+					break;
+				default:
+					rptNameOF = "OForm SMO-AFO_Active";
+					break;
 			}
-			var reportPath = string.Format ("{0}{1}", ssrsPrefix, ssrsRptName);
+
+			var reportPathJT = string.Format ("{0}{1}", ssrsPrefix, rptNameJT);
+			var reportPathOF = string.Format ("{0}{1}", ssrsPrefix, rptNameOF);
 
 			oTrans.PushStatusText ("Executing Report", true);
-			var reportBytes = CodaBears.Epicor.QuickPrint.Reports.GetSSRSReport (serviceAddress, reportPath, parmList);
+			var reportBytesJT = CodaBears.Epicor.QuickPrint.Reports.GetSSRSReport (serviceAddress, reportPathJT, parmListJT);
+			var reportBytesOF = CodaBears.Epicor.QuickPrint.Reports.GetSSRSReport (serviceAddress, reportPathOF, parmListOF);
 			
-			if (reportBytes == null) {
+			if ( reportBytesJT == null && reportBytesOF == null ) {
 				MessageBox.Show ("No report was returned.");
+
 			} else {
-				System.IO.File.WriteAllBytes(filename, reportBytes);
+
+				if ( printJT || printBoth ) System.IO.File.WriteAllBytes(jtFileName, reportBytesJT);
 				
-				if (isOForm) {
-					// 2022725 Kevin Veldman has mentioned that the background image may change per custom item; code will need to be modified; not part of current scope
-					var watermarkPath = string.Format(@"\\Epapp02\oform_pdf-do_not_change");
-					string backgroundFile = string.Format(@"{0}\{1}", watermarkPath, watermarkName);
+				if ( printOF || printBoth ) {
 					
-					var watermarkImage = XImage.FromFile(backgroundFile);
-					oTrans.PushStatusText ("opening background image", true);
-					var source = PdfReader.Open (filename);
-					oTrans.PushStatusText ("putting in watermark", true);
+					System.IO.File.WriteAllBytes(ofFileName, reportBytesOF);	
+					
+					string bkgFile = string.Format(@"\\Epapp02\oform_pdf-do_not_change\{0}", bkgName);
+					
+					var bkgImage = XImage.FromFile(bkgFile);
+					var source = PdfReader.Open (ofFileName);
 					var gfx = XGraphics.FromPdfPage (source.Pages[0], XGraphicsPdfPageOptions.Prepend);
-					var width = watermarkImage.PixelWidth * 72 / watermarkImage.HorizontalResolution;
-					var height = watermarkImage.PixelHeight * 72 / watermarkImage.VerticalResolution;
-					gfx.DrawImage (watermarkImage, 0, -180, width, height);
+					var width = bkgImage.PixelWidth * 72 / bkgImage.HorizontalResolution;
+					var height = bkgImage.PixelHeight * 72 / bkgImage.VerticalResolution;
+					gfx.DrawImage (bkgImage, 0, -180, width, height);
 					
 					oTrans.PushStatusText ("saving image with watermark", true);
-					source.Save (filename);
+					source.Save (ofFileName);
 				}
+
+				if ( printJT || printBoth ) {
+
+					Process jtProce = new Process();
+					jtProce.StartInfo.FileName = jtFileName;
+					jtProce.Start();
+
+					setTravFields();
+				}
+
+
+				if ( printOF || printBoth ) {
+
+					Process ofProce = new Process();
+					ofProce.StartInfo.FileName = ofFileName;
+					ofProce.Start();
+				}
+
 				
-				if (printButton) {		
+				
+				/* Removed email buttons, options are print Traveler or Print OForm and Traveler
 
-					Process proce = new Process();
-					proce.StartInfo.FileName = filename;
-					proce.Start();
+				if ( printButton ) {	
 
-					if ( !isOForm ) setTravFields();
+					Process jtProce = new Process();
+					jtProce.StartInfo.FileName = jtFileName;
+					jtProce.Start();
+
+					if ( printBoth ) {
+						Process ofProce = new Process();
+						ofProce.StartInfo.FileName = ofFileName;
+						ofProce.Start();
+					}
+
+					setTravFields();
 
 				} else {
 					oTrans.PushStatusText ("Get customer's email", true);
@@ -304,10 +355,10 @@ public class Script
 						
 					oTrans.PushStatusText ("Set up email parameters", true);
 
-					string formPreface = isOForm? "O-Form": "Confirmation";
+					string formPreface = printBoth? "O-Form": "Confirmation";
 					var emailSubject = string.Format("Surestep, LLC – {1} for Order #{0} Attached | CONFIDENTIAL/PROTECTED HEALTH INFORMATION ATTACHED", orderNum, formPreface);
 
-					string formInfo = isOForm? "O-Form": "order details";
+					string formInfo = printBoth? "O-Form": "order details";
 					var emailBody = string.Format ("<p>Surestep Sales Order #{0} has been received and processed. Please find attached the {1} for this order. Thank you for your order – we appreciate it very much!</p><p>Sincerely,</p><p>Customer Service Department</p><p>orders@surestep.net</p><p>Important Notice:</p><p>This message is intended only for the use of the individual or entity to which it is addressed. The documents in this e-mail or facsimile transmission may contain confidential health information that is privileged and legally protected from disclosure by the Health Insurance Portability and Accountability Act (HIPAA). This information is intended only for the use of the individual or entity named above. If you are not the intended recipient, you are hereby notified that reading, disseminating, disclosing, distributing, copying, acting upon or otherwise using the information contained in this facsimile is strictly prohibited. If you have received this information in error, please notify the sender.</p>", orderNum,formInfo);
 
 					oTrans.PushStatusText ("Set up email message", true);
@@ -334,22 +385,16 @@ public class Script
 						message.HTMLBody = emailBody + message.HTMLBody;
 						oTrans.PushStatusText(string.Format ("Created Email to {0}", emailTo), true);
 					}
-				}
+				} */
 			}
 			Cursor.Current = System.Windows.Forms.Cursors.Default;
 		}
 	}
 
-	public void setTravFields() {
+	public void setTravFields() { //Remove TravelerLastPrinted, now in BPM.
 
-		string guidMassPrint = "e56504ae-c608-4841-962a-5b540fdae4d3";
-		string guidLastPrint = "e2113199-7e79-4018-94ef-47a212282a86";
-
-		var massPrint = (EpiCheckBox)csm.GetNativeControlReference(guidMassPrint);
-		var lastPrint = (EpiDateTimeEditor)csm.GetNativeControlReference(guidLastPrint);
-
+		var massPrint = (EpiCheckBox)csm.GetNativeControlReference("e56504ae-c608-4841-962a-5b540fdae4d3");
 		massPrint.Checked = false;
-		lastPrint.Value = DateTime.Today;
 		oTrans.Update();
 	}
 }
@@ -361,5 +406,7 @@ public class Script
 	10/12/2022: +set SendFrom addr as noreply@surestep.net; Update email subject/body;
 	11/02/2022: +Handle different O-Form reports/backgrounds based on BasePartNum;
 	03/24/2023: Change orange buttons to JobTraveler;
+	03/28/2023: -Set TravelerLastPrinted from setTravFields method, moved to BPM;
+	03/28/2023: -Email handling, +Print O-Form && JobTrav button;
 
 =====================================================================================*/
