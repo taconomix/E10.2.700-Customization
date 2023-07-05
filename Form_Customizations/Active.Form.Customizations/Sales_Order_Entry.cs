@@ -8,7 +8,7 @@
 	         Print to PDF or open Outlook item as PDF Attachment.
 	         Add tab for credit card ordering, processing of credit cards
 
-	Changed: 07/03/2023
+	Changed: 07/05/2023
 		--Kevin Veldman <kevinv@surestep.net>
 ============================================================================*/
 
@@ -319,7 +319,7 @@ public class Script
 
 		} else { // Open Email (Outlook)
 
-			var txtPONumber = (EpiTextBox)csm.GetNativeControlReference ("4fceeeec-518c-4256-932e-34a4c1a584ee");
+			var txtPONumber = (EpiTextBox)csm.GetNativeControlReference ("e5d73cb9-1d94-45ce-85be-db4c85fe3264");
 			var txtCustID = (EpiTextBox)csm.GetNativeControlReference("7ece91c9-dc93-4df4-9591-f6cad7562b71");
 			var dtePromiseDate = (EpiDateTimeEditor)csm.GetNativeControlReference("47b19f90-8d13-4fd9-8310-ab75ad6f8224");
 						
@@ -363,15 +363,15 @@ public class Script
 			string _longForm = qpOForm? "Surestep O-Form": "Order Confirmation form";
 
 			var emailSubject = string.Format( "Surestep, LLC - {0} for Order #{1} Attached", _shortForm, orderNum );
-			var emailBody = string.Format ( "<p>Dear Customer, </p><p>Your Surestep order has been received and processed as Sales Order #{0}. Your {1} is attached, and the expected shipping date is {2}.</p><p>Thank you for your order – we appreciate it very much!</p><p>Sincerely,</p><p>Customer Service Department</p><p>P: (877)462-0711 | F: (866)700-7837</p><p>orders@surestep.net</p>", orderNum, _longForm, dtePromiseDate.Text );
+			var emailBody = string.Format ( "<p>Dear Customer, </p><p>Your Surestep order has been received and processed as Sales Order #{0}. Your {1} is attached, and the expected shipping date is {2}.<br>Thank you for your order – we appreciate it very much!</p><p>Sincerely,</p><p>Customer Service Department<br>P: (877)462-0711 | F: (866)700-7837<br>orders@surestep.net</p>", orderNum, _longForm, dtePromiseDate.Text );
 
 			if ( qpSOAck && getCredHoldStatus() ) { 
 
 				var _poNum = txtPONumber.Text;
 				var _custNum = txtCustID.Text;
 
-				emailSubject = string.Format("Surestep, LLC - Issue with Account #{0}", _custNum); 
-				emailBody = string.Format("<p>Dear Customer, </p><p><b>Thank you for your recent order. Your account #{0} is ON HOLD</b>. While we very much appreciate your business, PO# {1} will not be processed for fabrication until the matter with your account is resolved. Please have someone from your accounting team contact us at (877) 462-0711.</p><p>The order will ship between 4 and 8 days <b>after the issue with your account</b> is resolved.</p><p>Sincerely,</p><p>Kimberly Sante<br>SureStep Accounts Receivable<br>P: (877) 462-0711 | F: (866) 700-7837<br>kimberlys@surestep.net</p>", _custNum, _poNum );
+				emailSubject = string.Format("Surestep, LLC - Issue with Account {0}", _custNum); 
+				emailBody = string.Format("<p>Dear Customer, </p><p>Thank you for your recent order. <b>Your account {0} is ON HOLD</b>. While we very much appreciate your business, PO {1} (Order #{2}) will not be processed for fabrication until the matter with your account is resolved. Please have someone from your accounting team contact us at (877) 462-0711.</p><p>The order will ship between 4 and 8 days <b>after the issue with your account</b> is resolved.</p><p>Sincerely,</p><p>Kimberly Sante<br>Surestep Accounts Receivable<br>P: (877) 462-0711 | F: (866) 700-7837<br>kimberlys@surestep.net</p>", _custNum, _poNum, orderNum );
 			}
 
 			// Create Email Message
@@ -413,13 +413,11 @@ public class Script
 	}
 
 
-
 	public void setSOAckPrintDate() { // Set PrintDate (UserDate4) for SOAck Print Date
 
 		var edv = (EpiDataView)oTrans.EpiDataViews["OrderHed"];
 		edv.dataView[edv.Row]["UserDate4"] = DateTime.Today;
 	}
-
 
 
 	private bool ExitMethod ( bool ExitCondition, string ExitMessage ) { // If true, show message and return true
@@ -428,7 +426,6 @@ public class Script
 		return ExitCondition;
 	}
 }
-
 
 
 /*== Change Log ===================================================================================
@@ -441,6 +438,7 @@ public class Script
 	03/29/2023: +SOAck QP Print Button;
 	06/13/2023: +SOAck QP Email Button, Update Email Body to include Promised Date (oh.NeedByDate);
 	06/20/2023: +New function to log print date for SO Acknowledgment;
-	07/03/2023' Minor Refactor, add getCredHoldStatus & ExitMethod methods;
+	07/03/2023: Minor Refactor, add getCredHoldStatus & ExitMethod methods;
+	07/05/2023: +New email Text for Credit Hold Customers;
 
 =================================================================================================*/
