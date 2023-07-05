@@ -371,7 +371,7 @@ public class Script
 				var _custNum = txtCustID.Text;
 
 				emailSubject = string.Format("Surestep, LLC - Issue with Account #{0}", _custNum); 
-				emailBody = string.Format("<p>Dear Customer, </p><p><b>Thank you for your recent order. Your account #{0} is ON HOLD</b>. While we very much appreciate your business, PO# {1} will not be processed for fabrication until the matter with your account is resolved. Please have someone from your accounting team contact us at (877) 462-0711.</p><p>The order will ship between 4 and 8 days <b>after the issue with your account</b> is resolved.</p><p>Sincerely,</p><p>Kimberly Sante</p><p>SureStep Accounts Receivable</p><p>P: (877) 462-0711 | F: (866) 700-7837</p><p>kimberlys@surestep.net</p>", _custNum, _poNum );
+				emailBody = string.Format("<p>Dear Customer, </p><p><b>Thank you for your recent order. Your account #{0} is ON HOLD</b>. While we very much appreciate your business, PO# {1} will not be processed for fabrication until the matter with your account is resolved. Please have someone from your accounting team contact us at (877) 462-0711.</p><p>The order will ship between 4 and 8 days <b>after the issue with your account</b> is resolved.</p><p>Sincerely,</p><p>Kimberly Sante<br>SureStep Accounts Receivable<br>P: (877) 462-0711 | F: (866) 700-7837<br>kimberlys@surestep.net</p>", _custNum, _poNum );
 			}
 
 			// Create Email Message
